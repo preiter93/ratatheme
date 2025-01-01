@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members = [
+    # "ratatheme", 
+    "ratatheme-derive",
+    "ratatheme-internal",
+]
+default-members = [
+    # "ratatheme", 
+    "ratatheme-derive",
+    "ratatheme-internal",
+]
+
+[workspace.package]
+repository = "https://github.com/preiter93/ratatheme"
+edition = "2021"
+authors = ["preiter <phil.reiter93@gmail.com>"]
+keywords = ["theme", "parser", "ratatui", "tui"]
+
+[workspace.dependencies]
+# ratatheme = { path = "ratatheme", version = "0.1.0" }
+ratatheme-derive = { path = "ratatheme-derive", version = "0.1.0" }
+ratatheme-internal = { path = "ratatheme-internal", version = "0.1.0" }
