@@ -27,9 +27,10 @@ pub fn theme_macro(input: TokenStream) -> TokenStream {
         panic!("Theme must have named fields");
     };
 
-    if fields.named.is_empty() {
-        panic!("Theme must have one or more fields");
-    }
+    assert!(
+        !fields.named.is_empty(),
+        "Theme must have one or more fields"
+    );
 
     let mut style_implementation = quote! {};
 
@@ -50,12 +51,12 @@ pub fn theme_macro(input: TokenStream) -> TokenStream {
                 let generated = generate_style_method(field_name);
                 style_implementation.extend(generated);
             }
+            Metadata::Styles(subfields) => {
+                let generated = generate_styles_method(field, subfields);
+                style_implementation.extend(generated);
+            }
             Metadata::Colors => {
                 has_colors_field = true;
-            }
-            Metadata::Styles(subfields) => {
-                let generated = generate_styles_method(&field, subfields);
-                style_implementation.extend(generated);
             }
         }
     }
@@ -64,7 +65,6 @@ pub fn theme_macro(input: TokenStream) -> TokenStream {
         quote! {
             fn _color_from_str(&self, color: &str) -> ratatui::style::Color {
                 use std::str::FromStr;
-
                 let color = self.colors.get(color).unwrap_or(color);
                 ratatui::style::Color::from_str(color).expect("failed to parse color from str")
             }
@@ -72,6 +72,7 @@ pub fn theme_macro(input: TokenStream) -> TokenStream {
     } else {
         quote! {
             fn _color_from_str(&self, color: &str) -> ratatui::style::Color {
+                use std::str::FromStr;
                 ratatui::style::Color::from_str(color).expect("failed to parse color from str")
             }
         }
@@ -107,10 +108,7 @@ fn find_metadata(attr: &Attribute) -> Option<Metadata> {
     };
 
     let mut iter = list.tokens.clone().into_iter();
-
-    let Some(ident) = iter.next() else {
-        return None;
-    };
+    let ident = iter.next()?;
 
     match ident.to_string().as_str() {
         "style" => Some(Metadata::Style),
