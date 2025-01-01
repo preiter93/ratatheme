@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "ratatheme-macro",
+    "ratatheme-types",
+]
+
+resolver = "2"
