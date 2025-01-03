@@ -6,4 +6,6 @@ members = [
     "ratatheme-types",
 ]
 
+default-members = ["ratatheme"]
+
 resolver = "2"
