@@ -5,7 +5,4 @@ members = [
     "ratatheme-derive",
     "ratatheme-types",
 ]
-
-default-members = ["ratatheme"]
-
 resolver = "2"
