@@ -8,27 +8,27 @@ fn main() {
 
 // Theme must implement `DeserializeTheme`.
 #[derive(Debug, DeserializeTheme)]
-struct Theme {
+pub struct Theme {
     // Use the `style` attribute to indicate that this field is parsed with
     // the custom deserializer. It should only be applied to fields of type
     // `ratatui::style::Styles`.
     #[theme(style)]
-    base: Style,
+    pub base: Style,
 
     // Use the `styles` attribute to define the styles of a subtheme.
     #[theme(styles(info))]
-    dialog: DialogTheme,
+    pub dialog: DialogTheme,
 
     // Fields that are not annotated are parsed with `serde::Deserialize`.
-    hide: Option<bool>,
+    pub hide: Option<bool>,
 }
 
 // Subthemes must implement `Subtheme`.
 #[derive(Debug, Subtheme)]
-struct DialogTheme {
+pub struct DialogTheme {
     // Use the `styles` attribute also on the subtheme's styles.
     #[theme(style)]
-    info: Style,
+    pub info: Style,
 }
 
 impl Default for Theme {
