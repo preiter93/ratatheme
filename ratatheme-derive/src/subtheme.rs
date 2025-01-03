@@ -36,7 +36,7 @@ pub(super) fn expand_subtheme(input: &DeriveInput) -> TokenStream {
 
         let (declaration, assignment) = match meta {
             Some(Metadata::Style) => (
-                quote! { #field_name: ratatheme_types::Style },
+                quote! { #field_name: ratatheme::Style },
                 quote! { #field_name: ratatui::style::Style::default() },
             ),
             None => {
@@ -70,12 +70,3 @@ pub(super) fn expand_subtheme(input: &DeriveInput) -> TokenStream {
 
     TokenStream::from(expanded)
 }
-
-// impl From<DialogThemeProxy> for DialogTheme {
-//     fn from(value: DialogThemeProxy) -> Self {
-//         DialogTheme {
-//             info: ratatui::style::Style::default(),
-//             hide: value.hide,
-//         }
-//     }
-// }

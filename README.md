@@ -71,7 +71,13 @@ impl Default for Theme {
     "##;
 
         let deserializer = toml::Deserializer::new(toml_str);
-        Theme::deserialize_theme(deserializer).unwrap()
+        Self::deserialize_theme(deserializer).unwrap()
     }
 }
+```
+
+In Cargo.toml you must specify `ratatheme` as well as `serde`.
+```
+ratatheme = { package = "ratatheme", git = "https://github.com/preiter93/ratatheme.git", branch = "main" }
+serde = { version = "1.0" }
 ```

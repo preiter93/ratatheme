@@ -48,6 +48,6 @@ impl Default for Theme {
     "##;
 
         let deserializer = toml::Deserializer::new(toml_str);
-        Theme::deserialize_theme(deserializer).unwrap()
+        Self::deserialize_theme(deserializer).unwrap()
     }
 }

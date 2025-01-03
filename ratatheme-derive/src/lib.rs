@@ -23,7 +23,7 @@ pub fn deserialize_theme_macro(input: TokenStream) -> TokenStream {
 ///
 /// The expansion creates a proxy struct that has the same fields as the
 /// original struct, but replaces all field types annotated with
-/// `#[theme(style)]` with [`ratatheme_types::Style`] to improve parsability.
+/// `#[theme(style)]` with [`ratatheme::Style`] to improve parsability.
 #[proc_macro_derive(Subtheme, attributes(theme))]
 pub fn subtheme_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

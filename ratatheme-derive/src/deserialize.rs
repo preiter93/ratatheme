@@ -157,7 +157,7 @@ pub(super) fn impl_deserialize_theme(input: &DeriveInput) -> TokenStream {
     };
 
     let deserialize_implementation = quote! {
-        impl<'de> ratatheme_types::DeserializeTheme<'de> for #struct_name {
+        impl<'de> ratatheme::DeserializeTheme<'de> for #struct_name {
             fn deserialize_theme<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::de::Deserializer<'de>,
