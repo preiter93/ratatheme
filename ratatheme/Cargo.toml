@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ratatheme-types = { version = "0.1.0", path = "../ratatheme-types" }
-ratatheme-derive = { version = "0.1.0", path = "../ratatheme-derive" }
+ratatheme-types = { version = "0.1.0", git = "https://github.com/preiter93/ratatheme.git" }
+ratatheme-derive = { version = "0.1.0", git = "https://github.com/preiter93/ratatheme.git" }
 ratatui = { version = "0.29.0" }
 serde = { version = "1.0", features = ["derive"] }
 
