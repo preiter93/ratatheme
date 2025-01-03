@@ -25,7 +25,31 @@ pub struct Theme {
 #[derive(Debug, Default)]
 pub struct DialogTheme {
     pub info: Style,
-    pub warn: Style,
+    pub hide: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+struct DialogThemeProxy {
+    info: ratatheme_types::Style,
+    hide: Option<bool>,
+}
+
+impl From<DialogThemeProxy> for DialogTheme {
+    fn from(value: DialogThemeProxy) -> Self {
+        DialogTheme {
+            info: ratatui::style::Style::default(),
+            hide: value.hide,
+        }
+    }
+}
+
+impl From<DialogThemeProxy> for DialogTheme {
+    fn from(value: DialogThemeProxy) -> Self {
+        Self {
+            info: ratatui::style::Style::default(),
+            hide: value.hide,
+        }
+    }
 }
 
 impl Default for Theme {
@@ -44,15 +68,11 @@ impl Default for Theme {
 
         [dialog]
         info.foreground = "blue"
+        hide = true
     "##;
         let deserializer = toml::Deserializer::new(&toml_str);
         Theme::deserialize_theme(deserializer).unwrap()
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct DialogThemeProxy {
-    info: ratatheme_types::Style,
 }
 
 impl<'de> DeserializeTheme<'de> for Theme {
@@ -78,8 +98,6 @@ impl<'de> DeserializeTheme<'de> for Theme {
                 let mut dialog_proxy: Option<DialogThemeProxy> = None;
 
                 let mut hide: Option<bool> = None;
-
-                let mut rest: HashMap<String, String> = HashMap::default();
 
                 while let Some(key) = access.next_key::<String>()? {
                     match String::as_str(&key) {
@@ -125,19 +143,28 @@ impl<'de> DeserializeTheme<'de> for Theme {
                     }
                 }
 
-                let mut dialog: DialogTheme = unsafe { std::mem::zeroed() };
-                if let Some(proxy) = dialog_proxy {
-                    if let Some(color_str) = proxy.info.fg {
-                        if let Some(color) = resolve_color_str(&color_str, &colors_map) {
-                            dialog.info = dialog.info.fg(color);
+                let dialog = dialog_proxy.take().map_or_else(
+                    || unsafe { std::mem::zeroed() },
+                    |mut proxy| {
+                        let fg = proxy.info.fg.take();
+                        let bg = proxy.info.bg.take();
+                        let mut dialog: DialogTheme = proxy.into();
+
+                        if let Some(color_str) = fg {
+                            if let Some(color) = resolve_color_str(&color_str, &colors_map) {
+                                dialog.info = dialog.info.fg(color);
+                            }
                         }
-                    }
-                    if let Some(color_str) = proxy.info.bg {
-                        if let Some(color) = resolve_color_str(&color_str, &colors_map) {
-                            dialog.info = dialog.info.bg(color);
+
+                        if let Some(color_str) = bg {
+                            if let Some(color) = resolve_color_str(&color_str, &colors_map) {
+                                dialog.info = dialog.info.bg(color);
+                            }
                         }
-                    }
-                }
+
+                        dialog
+                    },
+                );
 
                 let hide = hide.unwrap();
 

@@ -11,19 +11,29 @@ fn main() {
 struct Theme {
     #[theme(style)]
     base: Style,
+
     #[theme(styles(info, warn))]
     dialog: DialogTheme,
+
+    hide: Option<bool>,
 }
 
 #[derive(Debug, Subtheme)]
 struct DialogTheme {
+    #[theme(style)]
     info: Style,
+
+    #[theme(style)]
     warn: Style,
+
+    hide: bool,
 }
 
 impl Default for Theme {
     fn default() -> Self {
         let toml_str = r##"
+        hide = true
+
         [colors]
         "red" = "#d32f2f"
         "blue" = "#1976d2"
@@ -36,8 +46,9 @@ impl Default for Theme {
         [dialog]
         info.foreground = "blue"
         warn.foreground = "red"
+        hide = true
     "##;
         let deserializer = toml::Deserializer::new(toml_str);
-        Theme::deserialize(deserializer).unwrap()
+        Theme::deserialize_theme(deserializer).unwrap()
     }
 }

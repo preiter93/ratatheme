@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
 mod deserialize;
+mod helpers;
 mod subtheme;
 
 /// A procedural macro that implements [`serde::Deserialize`] for
@@ -17,7 +18,7 @@ pub fn deserialize_theme_macro(input: TokenStream) -> TokenStream {
     deserialize::impl_deserialize_theme(&input)
 }
 
-#[proc_macro_derive(Subtheme)]
+#[proc_macro_derive(Subtheme, attributes(theme))]
 pub fn subtheme_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     subtheme::expand_subtheme(&input)
