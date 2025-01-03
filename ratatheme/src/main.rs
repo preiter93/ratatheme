@@ -1,4 +1,3 @@
-#![allow(unused)]
 use ratatheme::{DeserializeTheme, Subtheme};
 use ratatui::style::Style;
 
@@ -7,47 +6,47 @@ fn main() {
     println!("theme {theme:#?}");
 }
 
+// Theme must implement `DeserializeTheme`.
 #[derive(Debug, DeserializeTheme)]
 struct Theme {
+    // Use the `style` attribute to indicate that this field is parsed with
+    // the custom deserializer. It should only be applied to fields of type
+    // `ratatui::style::Styles`.
     #[theme(style)]
     base: Style,
 
-    #[theme(styles(info, warn))]
+    // Use the `styles` attribute to define the styles of a subtheme.
+    #[theme(styles(info))]
     dialog: DialogTheme,
 
+    // Fields that are not annotated are parsed with `serde::Deserialize`.
     hide: Option<bool>,
 }
 
+// Subthemes must implement `Subtheme`.
 #[derive(Debug, Subtheme)]
 struct DialogTheme {
+    // Use the `styles` attribute also on the subtheme's styles.
     #[theme(style)]
     info: Style,
-
-    #[theme(style)]
-    warn: Style,
-
-    hide: bool,
 }
 
 impl Default for Theme {
     fn default() -> Self {
         let toml_str = r##"
-        hide = true
-
         [colors]
-        "red" = "#d32f2f"
-        "blue" = "#1976d2"
-        "green" = "#388e3c"
+        "my_red" = "#d32f2f"
+        "my_blue" = "#1976d2"
+        "my_green" = "#388e3c"
 
         [base]
-        foreground = "red"
-        background = "green"
+        foreground = "my_red"
+        background = "my_green"
 
         [dialog]
-        info.foreground = "blue"
-        warn.foreground = "red"
-        hide = true
+        info.foreground = "my_blue"
     "##;
+
         let deserializer = toml::Deserializer::new(toml_str);
         Theme::deserialize_theme(deserializer).unwrap()
     }

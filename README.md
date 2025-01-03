@@ -1,22 +1,22 @@
 # ratatheme
 
-`ratatheme` is a convenient theme parser for `ratatui` apps. It simplifies defining and deserializing themes from configuration 
-files into a theme with `ratatui::Style`s.
+`ratatheme` is a convenient theme parser for [ratatui](https://github.com/ratatui/ratatui) applications. It simplifies deserialization of themes from configuration files into a theme that holds `ratatui::Style`'s.
 
-## What does `ratatheme` try to solve?
+## What does `ratatheme` attempt to solve?
 
-Ratatui themes are often defined as a collection of `ratatui::style::Styles`. and themes may often be defined in a serialized format such as a toml configuration file. But ratatui Styles have the issue that the color only deserializes from either the hex xode or a limited number of color name keywords. But what if you want to define your own color `my_color` and reference it in your configuration? With `ratatheme` you can define a color map alongside your configuration.
-The styles can then be defined using the color name and `ratatheme` takes care of resolving the color from the colormap.
+Ratatui themes are often defined as a collection of `ratatui::style::Style`'s. And themes may be defined in a serialized format such as a toml configuration file. The current deserialization process for converting serialized data, such as a TOML string, into `ratatui::style::Style` is somewhat rigid. While `ratatui::style::Style` allows colors to be parsed from a string, the built-in parser only supports a limited set of color formats. It accepts for example colors in hex codes or a predefined set of standard color names like red, blue, etc.
 
-Note that this is similar to css, where you can define global color variables and use them with var(--my-color).
+But what if you wish to define a unique color, such as `my_color`, and reference it in your configuration?. Just similar to CSS where you would define a global color variable and use it with var(--my-color). Ideally, the deserialization process should support such custom color definitions, allowing users to define their own colors.
+
+With “Ratatheme” you can define a color map from color name to hex code next to your configuration. The foreground and background color of the `ratatui::style::Style` can then be defined via the color name in your configuration file. `Ratatheme` takes care of resolving the color from the color map at deserialization time.
 
 ## Central elements
 
-Under the hood `ratatheme` provides a proc macro `DeserializeTheme` that provides a `deserialize_theme` method, similar to serdes `Deserialize` macro. Your themes have to derive `DeserializeTheme` and each style field should be annotated with `#[theme(style)]`. Fields that are not annotated are simply deserialized using serde but are not handled specially. Themes can also have a single layer of depth by annotaing with `styles` and deriong `Subtheme` on the type of the annotated field.
+- **`DeserializeTheme`**: A custom `Deserialize` proc macro that implements `deserialize_theme`.
+- Attribute `style`**: Fields annotated with `#[theme(style)]` implement a special style deserialization.
+- **`Subtheme`**: A derive macro for subthemes.
 
-- **`DeserializeTheme`**: A custom `Deserialize` proc macro.
-- **`style` attribute**: Annotate fields with `#[theme(style)]` to specify that these fields will be deserialized and used to generate `ratatui::Style` objects. The `foreground` and `background` fields of the serialized data can hold color names which will be references from a map of colors. See below.
-- **`Subtheme`**: For nested themes, the struct must derive the `Subtheme` proc macro.
+Under the hood `ratatheme` provides a proc macro `DeserializeTheme` that provides a `deserialize_theme` method. Notice that this is similar to serdes `Deserialize` macro. A theme derives `DeserializeTheme` and each style field should be annotated with `#[theme(style)]`. Fields that are not annotated are simply deserialized using standard serde. Themes can also have one (and not more) layer of depth, i.e. subthemes. The subtheme field inside the Theme must be annotated with `styles(field_a, field_b)`. The subtheme struct itself must derive `Subtheme` and each style field must also be annotated with `#[theme(style)]`. Sounds complicated? Let's jump into an example.
 
 ## Usage
 
@@ -32,20 +32,26 @@ fn main() {
 // Theme must implement `DeserializeTheme`.
 #[derive(Debug, DeserializeTheme)]
 struct Theme {
-    // Use the `style` attribute to indicate this field should be deserialized smartly.
+    // Use the `style` attribute to indicate that this field is parsed with
+    // the custom deserializer. It should only be applied to fields of type
+    // `ratatui::style::Styles`.
     #[theme(style)]
     base: Style,
 
     // Use the `styles` attribute to define the styles of a subtheme.
-    #[theme(styles(info, warn))]
+    #[theme(styles(info))]
     dialog: DialogTheme,
+    
+    // Fields that are not annotated are parsed with `serde::Deserialize`.
+    hide: Option<bool>,
 }
 
-// Themes must implement `Subtheme`.
+// Subthemes must implement `Subtheme`.
 #[derive(Debug, Subtheme)]
 struct DialogTheme {
+    // Use the `styles` attribute also on the subtheme's styles.
+    #[theme(style)]
     info: Style,
-    warn: Style,
 }
 
 impl Default for Theme {
@@ -62,11 +68,10 @@ impl Default for Theme {
 
         [dialog]
         info.foreground = "my_blue"
-        warn.foreground = "my_red"
     "##;
 
         let deserializer = toml::Deserializer::new(toml_str);
-        Theme::deserialize(deserializer).unwrap()
+        Theme::deserialize_theme(deserializer).unwrap()
     }
 }
 ```
