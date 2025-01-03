@@ -9,7 +9,7 @@ pub trait DeserializeTheme<'de>: Sized {
     ///
     /// # Errors
     /// Errors if deserialization fails.
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize_theme<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>;
 }
