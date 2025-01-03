@@ -11,11 +11,11 @@ struct Theme {
     base: Style,
 
     #[theme(styles(info, warn))]
-    dialog: DialogTheme,
+    dialog: Dialog,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
-struct DialogTheme {
+struct Dialog {
     info: Style,
 
     warn: Style,

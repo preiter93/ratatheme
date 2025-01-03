@@ -12,8 +12,8 @@ use syn::{parse_macro_input, Attribute, Data, DeriveInput, Field, Fields, Ident,
 /// # Panics
 /// This macro will panic in the following cases:
 /// - The macro is not attached to a struct.
-/// - The struct has no named fields to which the macro can attach.
-/// - The attribute tag is malformed or incorrect. The expected format is: `#[theme(style)]`.
+/// - The struct has no named fields.
+/// - The attribute tag is malformed.
 #[proc_macro_derive(Theme, attributes(theme))]
 pub fn theme_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -115,11 +115,10 @@ fn find_metadata(attr: &Attribute) -> Option<Metadata> {
         "colors" => Some(Metadata::Colors),
         "styles" => {
             let Some(TokenTree::Group(group)) = iter.next() else {
-                panic!("cannot parse styles annotation")
+                return None;
             };
 
             let mut fields = Vec::new();
-
             for field in group.stream() {
                 if let TokenTree::Ident(ident) = field {
                     fields.push(ident);
@@ -128,7 +127,7 @@ fn find_metadata(attr: &Attribute) -> Option<Metadata> {
 
             Some(Metadata::Styles(fields))
         }
-        s => panic!("expected metadata [style, colors, styles], but got: {s}"),
+        ident => panic!("unexpected metadata: {ident}, supported: style, colors or styles(..)"),
     }
 }
 
