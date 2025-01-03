@@ -5,13 +5,14 @@ files into a theme with `ratatui::Style`s.
 
 ## What does `ratatheme` try to solve?
 
-Ratatui themes are often defined as a collection of `ratatui::style::Styles`. However, these styles do not provide a convenient way to define
-a theme configuration. The main idea of ratatheme is that a mapping from color name to hex color can be specified alongside the theme config. 
-The styles can then be defined using the color name and `ratatheme` takes care of looking the color name up in the color map.
+Ratatui themes are often defined as a collection of `ratatui::style::Styles`. and themes may often be defined in a serialized format such as a toml configuration file. But ratatui Styles have the issue that the color only deserializes from either the hex xode or a limited number of color name keywords. But what if you want to define your own color `my_color` and reference it in your configuration? With `ratatheme` you can define a color map alongside your configuration.
+The styles can then be defined using the color name and `ratatheme` takes care of resolving the color from the colormap.
 
 Note that this is similar to css, where you can define global color variables and use them with var(--my-color).
 
 ## Central elements
+
+Under the hood `ratatheme` provides a proc macro `DeserializeTheme` that provides a `deserialize_theme` method, similar to serdes `Deserialize` macro. Your themes have to derive `DeserializeTheme` and each style field should be annotated with `#[theme(style)]`. Fields that are not annotated are simply deserialized using serde but are not handled specially. Themes can also have a single layer of depth by annotaing with `styles` and deriong `Subtheme` on the type of the annotated field.
 
 - **`DeserializeTheme`**: A custom `Deserialize` proc macro.
 - **`style` attribute**: Annotate fields with `#[theme(style)]` to specify that these fields will be deserialized and used to generate `ratatui::Style` objects. The `foreground` and `background` fields of the serialized data can hold color names which will be references from a map of colors. See below.
