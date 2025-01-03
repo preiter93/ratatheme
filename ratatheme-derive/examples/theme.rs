@@ -18,6 +18,8 @@ pub struct Theme {
 
     // #[theme(styles(info, warn))]
     pub dialog: DialogTheme,
+
+    pub hide: bool,
 }
 
 #[derive(Debug, Default)]
@@ -29,6 +31,8 @@ pub struct DialogTheme {
 impl Default for Theme {
     fn default() -> Self {
         let toml_str = r##"
+        hide = true
+
         [colors]
         "red" = "#d32f2f"
         "blue" = "#1976d2"
@@ -42,25 +46,17 @@ impl Default for Theme {
         info.foreground = "blue"
     "##;
         let deserializer = toml::Deserializer::new(&toml_str);
-        Theme::deserialize(deserializer).unwrap()
+        Theme::deserialize_theme(deserializer).unwrap()
     }
 }
 
 #[derive(Debug, Deserialize)]
-struct StyleProxy {
-    #[serde(alias = "foreground")]
-    fg: Option<String>,
-    #[serde(alias = "background")]
-    bg: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
 struct DialogThemeProxy {
-    info: StyleProxy,
+    info: ratatheme_types::Style,
 }
 
 impl<'de> DeserializeTheme<'de> for Theme {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize_theme<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -81,6 +77,10 @@ impl<'de> DeserializeTheme<'de> for Theme {
                 let mut base_map: Option<HashMap<String, String>> = None;
                 let mut dialog_proxy: Option<DialogThemeProxy> = None;
 
+                let mut hide: Option<bool> = None;
+
+                let mut rest: HashMap<String, String> = HashMap::default();
+
                 while let Some(key) = access.next_key::<String>()? {
                     match String::as_str(&key) {
                         "colors" => {
@@ -100,6 +100,12 @@ impl<'de> DeserializeTheme<'de> for Theme {
                                 return Err(de::Error::duplicate_field("dialog"));
                             }
                             dialog_proxy = Some(access.next_value()?);
+                        }
+                        "hide" => {
+                            if hide.is_some() {
+                                return Err(de::Error::duplicate_field("hide"));
+                            }
+                            hide = Some(access.next_value()?);
                         }
                         _ => {
                             let _ignored: de::IgnoredAny = access.next_value()?;
@@ -133,7 +139,9 @@ impl<'de> DeserializeTheme<'de> for Theme {
                     }
                 }
 
-                Ok(Theme { base, dialog })
+                let hide = hide.unwrap();
+
+                Ok(Theme { base, dialog, hide })
             }
         }
 

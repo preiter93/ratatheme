@@ -1,7 +1,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::{TokenStream as TokenStream2, TokenTree};
 use quote::{format_ident, quote};
-use syn::{Attribute, Data, DeriveInput, Field, Fields, Ident, Meta, Type};
+use syn::{
+    Attribute, Data, DeriveInput, Field, Fields, Ident, Meta, PathArguments, Type, TypePath,
+};
 
 use crate::subtheme::subtheme_proxy_name;
 
@@ -30,63 +32,73 @@ pub(super) fn impl_deserialize_theme(input: &DeriveInput) -> TokenStream {
     for field in &fields.named {
         let meta = handle_field(field);
 
-        let Some(meta) = meta else {
-            continue;
-        };
-
         let field_name = field.ident.as_ref().unwrap();
         let field_name_str = field_name.to_string();
         field_names.push(field_name.clone());
 
-        match meta {
-            Metadata::Style => {
+        let type_name = get_type_identifier(&field.ty).unwrap();
+
+        let var_name = match meta {
+            Some(Metadata::Style) => {
                 let map_name = format_ident!("{field_name}_map");
                 declarations.extend(quote! {
                     let mut #map_name: Option<std::collections::HashMap<String, String>> = None;
                 });
-
-                match_statements.extend(quote! {
-                    #field_name_str => {
-                        if #map_name.is_some() {
-                            return Err(serde::de::Error::duplicate_field(#field_name_str));
-                        }
-                        #map_name = Some(access.next_value()?);
-                    }
-                });
-
-                color_resolution.extend(quote! {
-                    let mut #field_name = ratatui::style::Style::default();
-                    if let Some(#map_name) = #map_name {
-                        if let Some(fg) = #struct_name::__resolve_fg_color(&#map_name, &color_map) {
-                            #field_name = #field_name.fg(fg);
-                        }
-                        if let Some(bg) = #struct_name::__resolve_bg_color(&#map_name, &color_map) {
-                            #field_name = #field_name.bg(bg);
-                        }
-                    }
-                });
+                map_name
             }
-            Metadata::Styles(fields) => {
-                let Type::Path(path) = field.ty.clone() else {
-                    panic!("Unexpected type of subtheme field: {:?}", field.ty);
-                };
-                let type_name = path.path.get_ident().unwrap();
-                let proxy_struct_name = subtheme_proxy_name(type_name);
+            Some(Metadata::Styles(_)) => {
+                let proxy_struct_name = subtheme_proxy_name(&type_name);
                 let proxy_var_name = format_ident!("{field_name}_proxy");
 
                 declarations.extend(quote! {
                     let mut #proxy_var_name: Option<#proxy_struct_name> = None;
                 });
 
-                match_statements.extend(quote! {
-                    #field_name_str => {
-                        if #proxy_var_name.is_some() {
-                            return Err(serde::de::Error::duplicate_field(#field_name_str));
+                proxy_var_name
+            }
+            _ => {
+                let is_option_type = is_option_type(&field.ty);
+                if is_option_type {
+                    declarations.extend(quote! {
+                        let mut #field_name: #type_name = None;
+                    });
+                } else {
+                    declarations.extend(quote! {
+                        let mut #field_name: Option<#type_name>> = None;
+                    });
+                }
+                field_name.clone()
+            }
+        };
+
+        let Some(meta) = meta else {
+            continue;
+        };
+
+        match_statements.extend(quote! {
+            #field_name_str => {
+                if #var_name.is_some() {
+                    return Err(serde::de::Error::duplicate_field(#field_name_str));
+                }
+                #var_name = Some(access.next_value()?);
+            }
+        });
+
+        match meta {
+            Metadata::Style => {
+                color_resolution.extend(quote! {
+                    let mut #field_name = ratatui::style::Style::default();
+                    if let Some(#var_name) = #var_name {
+                        if let Some(fg) = #struct_name::__resolve_fg_color(&#var_name, &color_map) {
+                            #field_name = #field_name.fg(fg);
                         }
-                        #proxy_var_name = Some(access.next_value()?);
+                        if let Some(bg) = #struct_name::__resolve_bg_color(&#var_name, &color_map) {
+                            #field_name = #field_name.bg(bg);
+                        }
                     }
                 });
-
+            }
+            Metadata::Styles(fields) => {
                 let field_assignments = fields.iter().map(|field| {
                     quote! {
                         if let Some(color_str) = proxy.#field.fg {
@@ -105,7 +117,7 @@ pub(super) fn impl_deserialize_theme(input: &DeriveInput) -> TokenStream {
 
                 color_resolution.extend(quote! {
                 let mut #field_name: #type_name = unsafe { std::mem::zeroed() };
-                if let Some(proxy) = #proxy_var_name {
+                if let Some(proxy) = #var_name {
                         #(#field_assignments)*
                     }
                 });
@@ -117,13 +129,13 @@ pub(super) fn impl_deserialize_theme(input: &DeriveInput) -> TokenStream {
         #(#field_names),*
     };
 
-    let return_statement = quote! {
+    let initialize_theme = quote! {
         Ok(#struct_name { #fields })
     };
 
     let deserialize_implementation = quote! {
         impl<'de> ratatheme_types::DeserializeTheme<'de> for #struct_name {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            fn deserialize_theme<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::de::Deserializer<'de>,
             {
@@ -162,7 +174,7 @@ pub(super) fn impl_deserialize_theme(input: &DeriveInput) -> TokenStream {
 
                         #color_resolution
 
-                        #return_statement
+                        #initialize_theme
                     }
                 }
 
@@ -264,4 +276,28 @@ fn get_color_resolver_fns() -> TokenStream2 {
 enum Metadata {
     Style,
     Styles(Vec<Ident>),
+}
+
+/// A helper method that checks whether a fields type is an Option.
+fn is_option_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.first() {
+            if segment.ident == "Option" {
+                if let PathArguments::AngleBracketed(arguments) = &segment.arguments {
+                    return !arguments.args.is_empty();
+                }
+            }
+        }
+    }
+    false
+}
+
+/// A helper method to extract the identifier of a field's type, if it exists
+fn get_type_identifier(ty: &Type) -> Option<syn::Ident> {
+    if let Type::Path(TypePath { path, .. }) = ty {
+        if let Some(segment) = path.segments.first() {
+            return Some(segment.ident.clone());
+        }
+    }
+    None
 }
