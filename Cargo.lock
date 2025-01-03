@@ -336,20 +336,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratatheme-derive"
+name = "ratatheme"
 version = "0.1.0"
 dependencies = [
- "proc-macro2",
- "quote",
+ "ratatheme-derive",
  "ratatheme-types",
  "ratatui",
  "serde",
- "syn",
  "toml",
 ]
 
 [[package]]
-name = "ratatheme-macro"
+name = "ratatheme-derive"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

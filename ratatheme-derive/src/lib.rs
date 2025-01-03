@@ -1,5 +1,8 @@
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, DeriveInput};
+
+mod deserialize;
+mod subtheme;
 
 /// A procedural macro that implements [`serde::Deserialize`] for
 /// themes with [`ratatui::style::Style`]'s and enables a more
@@ -11,19 +14,11 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 #[proc_macro_derive(DeserializeTheme, attributes(theme))]
 pub fn deserialize_theme_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let _ = &input.ident;
+    deserialize::impl_deserialize_theme(&input)
+}
 
-    let Data::Struct(data) = &input.data else {
-        panic!("derive must be attached to a struct");
-    };
-
-    let Fields::Named(fields) = &data.fields else {
-        return TokenStream::new();
-    };
-
-    if fields.named.is_empty() {
-        return TokenStream::new();
-    }
-
-    TokenStream::new()
+#[proc_macro_derive(Subtheme)]
+pub fn subtheme_macro(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    subtheme::expand_subtheme(&input)
 }

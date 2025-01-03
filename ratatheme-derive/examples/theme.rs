@@ -1,4 +1,4 @@
-use ratatheme_derive::DeserializeTheme;
+use ratatheme_types::DeserializeTheme;
 use ratatui::style::{Color, Style};
 use serde::{
     de::{self, MapAccess, Visitor},
@@ -11,12 +11,12 @@ fn main() {
     println!("theme {theme:#?}");
 }
 
-#[derive(Debug, DeserializeTheme)]
+#[derive(Debug)]
 pub struct Theme {
-    #[theme(style)]
+    // #[theme(style)]
     pub base: Style,
 
-    #[theme(styles(info, warn))]
+    // #[theme(styles(info, warn))]
     pub dialog: DialogTheme,
 }
 
@@ -41,7 +41,8 @@ impl Default for Theme {
         [dialog]
         info.foreground = "blue"
     "##;
-        toml::from_str(toml_str).unwrap()
+        let deserializer = toml::Deserializer::new(&toml_str);
+        Theme::deserialize(deserializer).unwrap()
     }
 }
 
@@ -58,7 +59,7 @@ struct DialogThemeProxy {
     info: StyleProxy,
 }
 
-impl<'de> Deserialize<'de> for Theme {
+impl<'de> DeserializeTheme<'de> for Theme {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -81,7 +82,7 @@ impl<'de> Deserialize<'de> for Theme {
                 let mut dialog_proxy: Option<DialogThemeProxy> = None;
 
                 while let Some(key) = access.next_key::<String>()? {
-                    match key.as_str() {
+                    match String::as_str(&key) {
                         "colors" => {
                             if colors_map.is_some() {
                                 return Err(de::Error::duplicate_field("colors"));
@@ -118,24 +119,21 @@ impl<'de> Deserialize<'de> for Theme {
                     }
                 }
 
-                let mut original: DialogTheme = unsafe { std::mem::zeroed() };
+                let mut dialog: DialogTheme = unsafe { std::mem::zeroed() };
                 if let Some(proxy) = dialog_proxy {
                     if let Some(color_str) = proxy.info.fg {
                         if let Some(color) = resolve_color_str(&color_str, &colors_map) {
-                            original.info = original.info.fg(color);
+                            dialog.info = dialog.info.fg(color);
                         }
                     }
                     if let Some(color_str) = proxy.info.bg {
                         if let Some(color) = resolve_color_str(&color_str, &colors_map) {
-                            original.info = original.info.bg(color);
+                            dialog.info = dialog.info.bg(color);
                         }
                     }
                 }
 
-                Ok(Theme {
-                    base,
-                    dialog: original,
-                })
+                Ok(Theme { base, dialog })
             }
         }
 

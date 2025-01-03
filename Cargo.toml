@@ -1,8 +1,8 @@
 [workspace]
 
-members = [ 
+members = [
+    "ratatheme", 
     "ratatheme-derive",
-    "ratatheme-macro",
     "ratatheme-types",
 ]
 

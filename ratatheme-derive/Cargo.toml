@@ -17,14 +17,14 @@ quote = "1.0"
 syn = "2.0"
 proc-macro2 = "1.0"
 
-serde = { version = "1.0" }
+# serde = { version = "1.0" }
 ratatui = { version = "0.29.0" }
 
 ratatheme-types = { version = "0.1.0", path = "../ratatheme-types" }
 
-[dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
+# [dev-dependencies]
 
 [[example]]
 name = "theme"
