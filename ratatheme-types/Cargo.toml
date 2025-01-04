@@ -2,6 +2,12 @@
 name = "ratatheme-types"
 version = "0.1.0"
 edition = "2021"
+authors = ["preiter <phil.reiter93@gmail.com>"]
+description = "Theme deserializer for Ratatui"
+keywords = ["theme", "deserialize", "parse", "ratatui", "tui"]
+repository = "https://github.com/preiter93/ratatheme"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }

@@ -1,8 +1,15 @@
 [workspace]
-
+resolver = "2"
 members = [
     "ratatheme", 
     "ratatheme-derive",
     "ratatheme-types",
 ]
-resolver = "2"
+default-members = [
+    "ratatheme", 
+    "ratatheme-derive",
+    "ratatheme-types",
+]
+
+[workspace.package]
+repository = "https://github.com/preiter93/ratatheme"
