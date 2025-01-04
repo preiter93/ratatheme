@@ -76,8 +76,8 @@ impl Default for Theme {
 }
 ```
 
-In Cargo.toml you must specify `ratatheme` as well as `serde`.
+You must specify `ratatheme` as well as `serde` as dependencies:
 ```
-ratatheme = { package = "ratatheme", git = "https://github.com/preiter93/ratatheme.git", branch = "main" }
 serde = { version = "1.0" }
+ratatheme = { version = "0.1.0", git = "https://github.com/preiter93/ratatheme.git", package = "ratatheme" }
 ```
