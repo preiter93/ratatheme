@@ -339,8 +339,8 @@ dependencies = [
 name = "ratatheme"
 version = "0.1.0"
 dependencies = [
- "ratatheme-derive 0.1.0 (git+https://github.com/preiter93/ratatheme.git)",
- "ratatheme-types 0.1.0 (git+https://github.com/preiter93/ratatheme.git)",
+ "ratatheme-derive",
+ "ratatheme-types",
  "ratatui",
  "serde",
  "toml",
@@ -356,29 +356,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratatheme-derive"
-version = "0.1.0"
-source = "git+https://github.com/preiter93/ratatheme.git#62009c2f4432808f0eb555dc5cf900a746e81ba4"
-dependencies = [
- "proc-macro2",
- "quote",
- "ratatheme-types 0.1.0 (git+https://github.com/preiter93/ratatheme.git)",
- "ratatui",
- "serde",
- "syn",
-]
-
-[[package]]
 name = "ratatheme-types"
 version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "ratatheme-types"
-version = "0.1.0"
-source = "git+https://github.com/preiter93/ratatheme.git#62009c2f4432808f0eb555dc5cf900a746e81ba4"
 dependencies = [
  "serde",
 ]

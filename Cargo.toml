@@ -13,3 +13,9 @@ default-members = [
 
 [workspace.package]
 repository = "https://github.com/preiter93/ratatheme"
+edition = "2021"
+
+[workspace.dependencies]
+ratatheme = { path = "ratatheme", version = "0.1.0" }
+ratatheme-types = { path = "ratatheme-types", version = "0.1.0" }
+ratatheme-derive = { path = "ratatheme-derive", version = "0.1.0" }
