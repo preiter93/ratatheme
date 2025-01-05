@@ -1,12 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-    # "ratatheme", 
+    "ratatheme", 
     "ratatheme-derive",
     "ratatheme-internal",
 ]
 default-members = [
-    # "ratatheme", 
+    "ratatheme", 
     "ratatheme-derive",
     "ratatheme-internal",
 ]
@@ -18,6 +18,6 @@ authors = ["preiter <phil.reiter93@gmail.com>"]
 keywords = ["theme", "parser", "ratatui", "tui"]
 
 [workspace.dependencies]
-# ratatheme = { path = "ratatheme", version = "0.1.0" }
+ratatheme = { path = "ratatheme", version = "0.1.0" }
 ratatheme-derive = { path = "ratatheme-derive", version = "0.1.0" }
 ratatheme-internal = { path = "ratatheme-internal", version = "0.1.0" }
