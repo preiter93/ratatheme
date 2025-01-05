@@ -1,8 +1,8 @@
 use core::panic;
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
+use proc_macro2::{Punct, Spacing, TokenStream as TokenStream2, TokenTree};
 use quote::quote;
-use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident};
+use syn::{parse::ParseStream, parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident};
 
 /// # Panics
 /// - Panics if derive is not attached to a struct
@@ -23,7 +23,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
     };
     let context_name = process_builder_struct_attribute(builder_attr);
     let Some(context_name) = context_name else {
-        panic!("no `context` field found in builder annotataion");
+        panic!("no `context` field found in builder annotation");
     };
 
     let Fields::Named(fields) = &data.fields else {
@@ -161,14 +161,14 @@ fn extract_builder_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
 }
 
 /// A helper method that processes a field with builder annotation.
-fn process_builder_field_attribute(attr: &Attribute) -> Option<Ident> {
-    let mut context: Option<Ident> = None;
+fn process_builder_field_attribute(attr: &Attribute) -> Option<TokenStream2> {
+    let mut context: Option<TokenStream2> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
         if meta.path.is_ident("value") {
             let value = meta.value()?;
-            let ident: syn::Ident = value.parse()?;
-            context = Some(ident);
+            let value = parse_stream_to_token_stream(&value)?;
+            context = Some(value);
             Ok(())
         } else {
             Err(meta.error("unsupported attribute"))
@@ -176,6 +176,25 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<Ident> {
     });
 
     context
+}
+
+/// A helper method that parses a `ParseStream` to a `TokenStream`. It is necessary
+/// to handle nested fields such as `#[builder(value=footer.hide)]`
+fn parse_stream_to_token_stream(input: ParseStream) -> Result<TokenStream2, syn::Error> {
+    let mut tokens = TokenStream2::new();
+    while !input.is_empty() {
+        if input.peek(Ident) {
+            let ident: Ident = input.parse()?;
+            tokens.extend(Some(TokenTree::Ident(ident)));
+        } else if input.peek(syn::Token![.]) {
+            let _dot: syn::Token![.] = input.parse()?;
+            tokens.extend(Some(TokenTree::Punct(Punct::new('.', Spacing::Alone))));
+        } else {
+            return Err(input.error("expected an identifier or a dot"));
+        }
+    }
+
+    Ok(tokens)
 }
 
 /// Helper to that process the builder attribute of a struct and returns the

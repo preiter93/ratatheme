@@ -5,28 +5,35 @@ use ratatui::style::{Style, Stylize};
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Colors {
+pub struct Config {
     pub primary: Color,
-    pub hide_footer: bool,
+    pub footer: Footer,
+}
+#[derive(Debug, Default, Deserialize)]
+pub struct Footer {
+    pub hide: bool,
 }
 
 #[derive(Debug, ThemeBuilder, PartialEq, Eq)]
-#[builder(context=Colors)]
+#[builder(context=Config)]
 pub struct Theme {
     /// Annotate styles with 'fg', 'bg' or any modifier, e.g. 'bold'.
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
     /// Note: fields can also be annoted with `builder` to values from context.
-    #[builder(value=hide_footer)]
+    #[builder(value=footer.hide)]
     pub hide: bool,
-    // /// Note: untagged fields must implement default.
-    // #[builder(value=hide_footer)]
-    // pub hide: bool,
+
+    /// Note: untagged fields must implement default.
+    pub tags: usize,
 }
 
 fn main() {
-    let color = Colors::default();
+    let color = Config {
+        primary: Color::from_rgb(0, 0, 0),
+        footer: Footer { hide: true },
+    };
     let theme = Theme::build(&color);
     println!("{theme:#?}");
 
@@ -38,7 +45,8 @@ fn main() {
                 .bg(ratatui::style::Color::Rgb(0, 0, 0))
                 .bold()
                 .underlined(),
-            hide: false,
+            hide: true,
+            tags: 0,
         }
     );
 }
