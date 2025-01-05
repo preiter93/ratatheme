@@ -7,6 +7,7 @@ use serde::Deserialize;
 #[derive(Debug, Default, Deserialize)]
 pub struct Colors {
     pub primary: Color,
+    pub hide_footer: bool,
 }
 
 #[derive(Debug, ThemeBuilder, PartialEq, Eq)]
@@ -16,8 +17,12 @@ pub struct Theme {
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
-    /// Note: other field must implement default.
+    /// Note: fields can also be annoted with `builder` to values from context.
+    #[builder(value=hide_footer)]
     pub hide: bool,
+    // /// Note: untagged fields must implement default.
+    // #[builder(value=hide_footer)]
+    // pub hide: bool,
 }
 
 fn main() {

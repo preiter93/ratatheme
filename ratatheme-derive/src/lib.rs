@@ -21,7 +21,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
     let Some(builder_attr) = builder_attr else {
         panic!("no `context` attribute found on struct");
     };
-    let context_name = process_builder_attribute(builder_attr);
+    let context_name = process_builder_struct_attribute(builder_attr);
     let Some(context_name) = context_name else {
         panic!("no `context` field found in builder annotataion");
     };
@@ -38,19 +38,21 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
 
         let mut field_constructor = quote! {};
 
+        // Handle `Style` tagged fields.
         let attr = extract_style_attribute(&field.attrs);
         if let Some(attr) = attr {
-            // Handle tagged fields. They must be of type `Style`.
             let style_values = process_style_attribute(attr);
 
             field_constructor.extend(quote! {
                 #field_name: ratatui::style::Style::default()
             });
+
             if let Some(foreground_color) = style_values.foreground {
                 field_constructor.extend(quote! {
                     .fg(context.#foreground_color.clone().into())
                 });
             }
+
             if let Some(background_color) = style_values.background {
                 field_constructor.extend(quote! {
                     .bg(context.#background_color.clone().into())
@@ -110,12 +112,31 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
                     .add_modifier(ratatui::style::Modifier::CROSSED_OUT)
                 });
             }
-        } else {
-            // Handle untagged fields.
-            field_constructor.extend(quote! {
-                    #field_name: <#field_type>::default()
-            });
+
+            field_constructors.push(field_constructor);
+            continue;
         }
+
+        // Handle `builder` tagged fields.
+        let attr = extract_builder_attribute(&field.attrs);
+        if let Some(attr) = attr {
+            let value = process_builder_field_attribute(attr);
+            let Some(value) = value else {
+                panic!("missing value in `builder` on field `{:?}`", field_name);
+            };
+
+            field_constructor.extend(quote! {
+                    #field_name: context.#value
+            });
+
+            field_constructors.push(field_constructor);
+            continue;
+        }
+
+        // Handle untagged fields.
+        field_constructor.extend(quote! {
+                #field_name: <#field_type>::default()
+        });
 
         field_constructors.push(field_constructor);
     }
@@ -139,9 +160,27 @@ fn extract_builder_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
     attrs.iter().find(|attr| attr.path().is_ident("builder"))
 }
 
+/// A helper method that processes a field with builder annotation.
+fn process_builder_field_attribute(attr: &Attribute) -> Option<Ident> {
+    let mut context: Option<Ident> = None;
+
+    let _ = attr.parse_nested_meta(|meta| {
+        if meta.path.is_ident("value") {
+            let value = meta.value()?;
+            let ident: syn::Ident = value.parse()?;
+            context = Some(ident);
+            Ok(())
+        } else {
+            Err(meta.error("unsupported attribute"))
+        }
+    });
+
+    context
+}
+
 /// Helper to that process the builder attribute of a struct and returns the
 /// ident of the context type.
-fn process_builder_attribute(attr: &Attribute) -> Option<Ident> {
+fn process_builder_struct_attribute(attr: &Attribute) -> Option<Ident> {
     let mut context: Option<Ident> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
