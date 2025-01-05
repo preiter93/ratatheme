@@ -4,12 +4,13 @@ use ratatheme_internal::ThemeBuilder;
 use ratatui::style::{Style, Stylize};
 use serde::Deserialize;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub primary: Color,
     pub footer: Footer,
 }
-#[derive(Debug, Default, Deserialize)]
+
+#[derive(Debug, Deserialize)]
 pub struct Footer {
     pub hide: bool,
 }

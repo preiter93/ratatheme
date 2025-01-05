@@ -71,11 +71,7 @@ impl From<Color> for ratatui::style::Color {
     }
 }
 
-// impl TryFrom<Color> for ratatui::style::Color {
-//     type Error = ratatui::style::ParseColorError;
-//
-//     fn try_from(value: Color) -> Result<Self, Self::Error> {
-//         use std::str::FromStr;
-//         ratatui::style::Color::from_str(&value.inner.to_hex_string())
-//     }
-// }
+pub trait ThemeBuilder {
+    type Context;
+    fn build(context: &Self::Context) -> Self;
+}
