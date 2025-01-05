@@ -1,23 +1,23 @@
 [workspace]
 resolver = "2"
 members = [
-    "ratatheme", 
-    "ratatheme-derive",
-    "ratatheme-internal",
+    "tui-theme-builder", 
+    "tui-theme-builder-derive",
+    "tui-theme-builder-internal",
 ]
 default-members = [
-    "ratatheme", 
-    "ratatheme-derive",
-    "ratatheme-internal",
+    "tui-theme-builder", 
+    "tui-theme-builder-derive",
+    "tui-theme-builder-internal",
 ]
 
 [workspace.package]
-repository = "https://github.com/preiter93/ratatheme"
+repository = "https://github.com/preiter93/tui-theme-builder"
 edition = "2021"
 authors = ["preiter <phil.reiter93@gmail.com>"]
 keywords = ["theme", "parser", "ratatui", "tui"]
 
 [workspace.dependencies]
-ratatheme = { path = "ratatheme", version = "0.1.0" }
-ratatheme-derive = { path = "ratatheme-derive", version = "0.1.0" }
-ratatheme-internal = { path = "ratatheme-internal", version = "0.1.0" }
+tui-theme-builder = { path = "tui-theme-builder", version = "0.1.0" }
+tui-theme-builder-derive = { path = "tui-theme-builder-derive", version = "0.1.0" }
+tui-theme-builder-internal = { path = "tui-theme-builder-internal", version = "0.1.0" }

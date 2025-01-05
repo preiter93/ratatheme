@@ -142,7 +142,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
     }
 
     let implementation = quote! {
-        impl ratatheme_internal::ThemeBuilder for #struct_name {
+        impl tui_theme_builder::ThemeBuilder for #struct_name {
             type Context = #context_name;
             fn build(context: &#context_name) -> Self {
                 Self {

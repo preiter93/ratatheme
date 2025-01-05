@@ -1,7 +1,6 @@
-use ratatheme_derive::ThemeBuilder;
-use ratatheme_internal::ThemeBuilder;
 use ratatui::style::{Color, Style, Stylize};
 use serde::Deserialize;
+use tui_theme_builder::ThemeBuilder;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {

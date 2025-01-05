@@ -390,39 +390,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 
 [[package]]
-name = "ratatheme"
-version = "0.1.0"
-dependencies = [
- "ratatheme-derive",
- "ratatheme-internal",
- "ratatui",
- "serde",
- "toml",
-]
-
-[[package]]
-name = "ratatheme-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "ratatheme-internal",
- "ratatui",
- "serde",
- "syn",
- "toml",
-]
-
-[[package]]
-name = "ratatheme-internal"
-version = "0.1.0"
-dependencies = [
- "csscolorparser",
- "ratatui",
- "serde",
-]
-
-[[package]]
 name = "ratatui"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -632,6 +599,39 @@ dependencies = [
  "serde_spanned",
  "toml_datetime",
  "winnow",
+]
+
+[[package]]
+name = "tui-theme-builder"
+version = "0.1.0"
+dependencies = [
+ "ratatui",
+ "serde",
+ "toml",
+ "tui-theme-builder-derive",
+ "tui-theme-builder-internal",
+]
+
+[[package]]
+name = "tui-theme-builder-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "ratatui",
+ "serde",
+ "syn",
+ "toml",
+ "tui-theme-builder-internal",
+]
+
+[[package]]
+name = "tui-theme-builder-internal"
+version = "0.1.0"
+dependencies = [
+ "csscolorparser",
+ "ratatui",
+ "serde",
 ]
 
 [[package]]

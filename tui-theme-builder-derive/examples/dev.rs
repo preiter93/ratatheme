@@ -1,6 +1,6 @@
-use ratatheme_internal::{Color, ThemeBuilder};
-use ratatui::style::Style;
+use ratatui::style::{Color, Style};
 use serde::Deserialize;
+use tui_theme_builder_internal::ThemeBuilder;
 
 #[derive(Debug, Deserialize)]
 pub struct MyColor {
@@ -10,7 +10,7 @@ pub struct MyColor {
 impl Default for MyColor {
     fn default() -> Self {
         let toml_str = r##"
-            "primary" = "rgb(1,0,0)"
+            "primary" = "#000000"
         "##;
         let deserializer = toml::Deserializer::new(&toml_str);
         Self::deserialize(deserializer).unwrap()
@@ -41,5 +41,5 @@ impl From<MyColor> for Theme {
 
 fn main() {
     let color = MyColor::default();
-    println!("{:#?}", color.primary.to_rgb());
+    println!("{:#?}", color.primary);
 }

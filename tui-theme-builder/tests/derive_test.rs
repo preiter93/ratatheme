@@ -1,5 +1,5 @@
-use ratatheme::ThemeBuilder;
 use ratatui::style::{Color, Modifier, Style};
+use tui_theme_builder::ThemeBuilder;
 
 #[test]
 fn theme_with_style() {

@@ -1,6 +1,6 @@
 /// A trait for building a theme from a given context.
 ///
-/// This trait is typically derived using `ratatheme::ThemeBuilder` from the `ratatheme-derive` crate.
+/// This trait is typically derived using `tui-theme-builder::ThemeBuilder` from the `tui-theme-builder-derive` crate.
 pub trait ThemeBuilder {
     /// The type of context used to build the theme.
     type Context;
