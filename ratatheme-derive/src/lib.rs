@@ -1,13 +1,10 @@
 use core::panic;
 use proc_macro::TokenStream;
-use proc_macro2::{TokenStream as TokenStream2, TokenTree};
+use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{
-    parenthesized, parse_macro_input, token::Paren, Attribute, Data, DeriveInput, Fields, Ident,
-    LitStr, Meta,
-};
+use syn::{parenthesized, parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident, LitStr};
 
-#[proc_macro_derive(FromColors, attributes(colors, style))]
+#[proc_macro_derive(ThemeBuilder, attributes(colors, builder, style))]
 pub fn derive_from_colors(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -17,14 +14,17 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
         panic!("derive must be attached to a struct");
     };
 
-    let colors_attr = extract_colors_attribute(&input.attrs);
-    let Some(colors_attr) = colors_attr else {
+    let builder_attr = extract_builder_attribute(&input.attrs);
+    let Some(builder_attr) = builder_attr else {
         panic!("no `colors` attribute found on struct");
     };
-    let colors_name = process_colors_attribute(colors_attr);
+    let colors_name = process_builder_attribute(builder_attr);
+    let Some(colors_name) = colors_name else {
+        panic!("no `colors` field found in builder annotataion");
+    };
 
     let Fields::Named(fields) = &data.fields else {
-        panic!("{}", PanicHelper::unexpected_fields(&data.fields));
+        panic!("expected named fields, got {:?}", &data.fields)
     };
 
     let mut field_constructors: Vec<TokenStream2> = Vec::new();
@@ -118,8 +118,8 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
     }
 
     let implementation = quote! {
-        impl From<#colors_name> for #struct_name {
-            fn from(color: #colors_name) -> Self {
+        impl #struct_name {
+            pub fn build(color: #colors_name) -> Self {
                 Self {
                     #(#field_constructors),*
                 }
@@ -127,30 +127,41 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
         }
     };
 
+    // let implementation = quote! {
+    //     impl From<#colors_name> for #struct_name {
+    //         fn from(color: #colors_name) -> Self {
+    //             Self {
+    //                 #(#field_constructors),*
+    //             }
+    //         }
+    //     }
+    // };
+
     TokenStream::from(implementation)
 }
 
-/// A helper method to extract the `colors` attribute in a list of attributes.
-fn extract_colors_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
-    attrs.iter().find(|attr| attr.path().is_ident("colors"))
+/// A helper method to extract the `builder` attribute in a list of attributes.
+fn extract_builder_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
+    attrs.iter().find(|attr| attr.path().is_ident("builder"))
 }
 
-/// Helper to that process the colors attribute and returns the ident of the color type.
-fn process_colors_attribute(attr: &Attribute) -> Ident {
-    let Meta::List(meta) = &attr.meta else {
-        panic!("{}", PanicHelper::invalid_annotation("colors", &attr.meta));
-    };
+/// Helper to that process the builder attribute of a struct and returns the
+/// ident of the color type.
+fn process_builder_attribute(attr: &Attribute) -> Option<Ident> {
+    let mut color: Option<Ident> = None;
 
-    let mut tokens = meta.tokens.clone().into_iter();
-    let tree = tokens.next();
-    let Some(tree) = tree else {
-        panic!("{}", PanicHelper::empty_metadata("colors"));
-    };
-    let TokenTree::Ident(ident) = tree else {
-        panic!("{}", PanicHelper::invalid_annotation("colors", &attr.meta));
-    };
+    let _ = attr.parse_nested_meta(|meta| {
+        if meta.path.is_ident("colors") {
+            let value = meta.value()?;
+            let ident: syn::Ident = value.parse()?;
+            color = Some(ident);
+            Ok(())
+        } else {
+            Err(meta.error("unsupported attribute"))
+        }
+    });
 
-    ident
+    color
 }
 
 /// A helper method to extract the `style` attribute in a list of attributes.
@@ -158,7 +169,7 @@ fn extract_style_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
     attrs.iter().find(|attr| attr.path().is_ident("style"))
 }
 
-/// A helper method that returns processes a style attributes metadata.
+/// A helper method that processes a field with style annotation.
 fn process_style_attribute(attr: &Attribute) -> StyleValues {
     let mut foreground: Option<Ident> = None;
     let mut background: Option<Ident> = None;
@@ -173,7 +184,7 @@ fn process_style_attribute(attr: &Attribute) -> StyleValues {
     let mut crossed_out: Option<bool> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
-        if meta.input.peek(Paren) {
+        if meta.input.peek(syn::token::Paren) {
             let meta_name = meta.path.get_ident();
             let Some(meta_name) = meta_name else {
                 return Err(meta.error("Expected an identifier in the metadata path"));
@@ -247,22 +258,4 @@ struct StyleValues {
     reversed: Option<bool>,
     hidden: Option<bool>,
     crossed_out: Option<bool>,
-}
-
-struct PanicHelper;
-
-impl PanicHelper {
-    fn invalid_annotation(annotation: &str, meta: &Meta) -> String {
-        format!(
-            "Invalid metadata annotation for '{annotation}': expected '#[{annotation}(MyValue)]', found '{meta:?}'"
-        )
-    }
-
-    fn empty_metadata(annotation: &str) -> String {
-        panic!("invalid metadata for '{annotation}', expect one type, found none");
-    }
-
-    fn unexpected_fields(fields: &Fields) -> String {
-        panic!("expected named fields, got {:?}", fields);
-    }
 }

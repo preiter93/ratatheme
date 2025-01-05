@@ -1,4 +1,4 @@
-use ratatheme_derive::FromColors;
+use ratatheme_derive::ThemeBuilder;
 use ratatheme_internal::Color;
 use ratatui::style::{Style, Stylize};
 use serde::Deserialize;
@@ -8,8 +8,8 @@ pub struct Colors {
     pub primary: Color,
 }
 
-#[derive(Debug, FromColors, PartialEq, Eq)]
-#[colors(Colors)]
+#[derive(Debug, ThemeBuilder, PartialEq, Eq)]
+#[builder(colors = Colors)]
 pub struct Theme {
     /// Annotate styles with 'fg', 'bg' or any modifier, e.g. 'bold'.
     #[style(fg(primary), bg(primary), bold, underlined)]
@@ -21,7 +21,7 @@ pub struct Theme {
 
 fn main() {
     let color = Colors::default();
-    let theme = Theme::from(color);
+    let theme = Theme::build(color);
     println!("{theme:#?}");
 
     assert_eq!(
