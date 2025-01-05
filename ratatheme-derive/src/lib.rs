@@ -1,11 +1,14 @@
 use core::panic;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{format_ident, quote};
-use syn::{parenthesized, parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident, LitStr};
+use quote::quote;
+use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident};
 
-#[proc_macro_derive(ThemeBuilder, attributes(colors, builder, style))]
-pub fn derive_from_colors(input: TokenStream) -> TokenStream {
+/// # Panics
+/// - Panics if derive is not attached to a struct
+/// - Panics if no `context` attribute is found
+#[proc_macro_derive(ThemeBuilder, attributes(context, builder, style))]
+pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let struct_name = &input.ident;
@@ -16,11 +19,11 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
 
     let builder_attr = extract_builder_attribute(&input.attrs);
     let Some(builder_attr) = builder_attr else {
-        panic!("no `colors` attribute found on struct");
+        panic!("no `context` attribute found on struct");
     };
-    let colors_name = process_builder_attribute(builder_attr);
-    let Some(colors_name) = colors_name else {
-        panic!("no `colors` field found in builder annotataion");
+    let context_name = process_builder_attribute(builder_attr);
+    let Some(context_name) = context_name else {
+        panic!("no `context` field found in builder annotataion");
     };
 
     let Fields::Named(fields) = &data.fields else {
@@ -45,12 +48,12 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
             });
             if let Some(foreground_color) = style_values.foreground {
                 field_constructor.extend(quote! {
-                    .fg(color.#foreground_color.clone().into())
+                    .fg(context.#foreground_color.clone().into())
                 });
             }
             if let Some(background_color) = style_values.background {
                 field_constructor.extend(quote! {
-                    .bg(color.#background_color.clone().into())
+                    .bg(context.#background_color.clone().into())
                 });
             }
 
@@ -118,24 +121,15 @@ pub fn derive_from_colors(input: TokenStream) -> TokenStream {
     }
 
     let implementation = quote! {
-        impl #struct_name {
-            pub fn build(color: #colors_name) -> Self {
+        impl ratatheme_internal::ThemeBuilder for #struct_name {
+            type Context = #context_name;
+            fn build(context: &#context_name) -> Self {
                 Self {
                     #(#field_constructors),*
                 }
             }
         }
     };
-
-    // let implementation = quote! {
-    //     impl From<#colors_name> for #struct_name {
-    //         fn from(color: #colors_name) -> Self {
-    //             Self {
-    //                 #(#field_constructors),*
-    //             }
-    //         }
-    //     }
-    // };
 
     TokenStream::from(implementation)
 }
@@ -146,22 +140,22 @@ fn extract_builder_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
 }
 
 /// Helper to that process the builder attribute of a struct and returns the
-/// ident of the color type.
+/// ident of the context type.
 fn process_builder_attribute(attr: &Attribute) -> Option<Ident> {
-    let mut color: Option<Ident> = None;
+    let mut context: Option<Ident> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
-        if meta.path.is_ident("colors") {
+        if meta.path.is_ident("context") {
             let value = meta.value()?;
             let ident: syn::Ident = value.parse()?;
-            color = Some(ident);
+            context = Some(ident);
             Ok(())
         } else {
             Err(meta.error("unsupported attribute"))
         }
     });
 
-    color
+    context
 }
 
 /// A helper method to extract the `style` attribute in a list of attributes.
@@ -184,48 +178,29 @@ fn process_style_attribute(attr: &Attribute) -> StyleValues {
     let mut crossed_out: Option<bool> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
-        if meta.input.peek(syn::token::Paren) {
-            let meta_name = meta.path.get_ident();
-            let Some(meta_name) = meta_name else {
-                return Err(meta.error("Expected an identifier in the metadata path"));
-            };
-
-            let content;
-            parenthesized!(content in meta.input);
-
-            // #[style(fg("primary"))]
-            let ident = if content.peek(LitStr) {
-                let lit: LitStr = content.parse()?;
-                format_ident!("{}", lit.value())
-            // #[style(fg(primary))]
-            } else if content.peek(syn::Ident) {
-                let ident: syn::Ident = content.parse()?;
-                ident
-            } else {
-                return Err(meta.error("Expected string or identifier"));
-            };
-
-            match meta_name.to_string().as_str() {
-                "fg" | "foreground" => foreground = Some(ident),
-
-                "bg" | "background" => background = Some(ident),
+        if let Some(ident) = meta.path.get_ident() {
+            match ident.to_string().as_str() {
+                "bold" => bold = Some(true),
+                "dim" => dim = Some(true),
+                "italic" => italic = Some(true),
+                "underlined" => underlined = Some(true),
+                "slow_blink" => slow_blink = Some(true),
+                "rapid_blink" => rapid_blink = Some(true),
+                "reversed" => reversed = Some(true),
+                "hidden" => hidden = Some(true),
+                "crossed_out" => crossed_out = Some(true),
+                "fg" | "foreground" => {
+                    let value = meta.value()?;
+                    let ident = value.parse()?;
+                    foreground = Some(ident);
+                }
+                "bg" | "background" => {
+                    let value = meta.value()?;
+                    let ident = value.parse()?;
+                    background = Some(ident);
+                }
                 _ => {}
-            }
-        } else {
-            if let Some(ident) = meta.path.get_ident() {
-                match ident.to_string().as_str() {
-                    "bold" => bold = Some(true),
-                    "dim" => dim = Some(true),
-                    "italic" => italic = Some(true),
-                    "underlined" => underlined = Some(true),
-                    "slow_blink" => slow_blink = Some(true),
-                    "rapid_blink" => rapid_blink = Some(true),
-                    "reversed" => reversed = Some(true),
-                    "hidden" => hidden = Some(true),
-                    "crossed_out" => crossed_out = Some(true),
-                    _ => {}
-                };
-            }
+            };
         }
 
         Ok(())

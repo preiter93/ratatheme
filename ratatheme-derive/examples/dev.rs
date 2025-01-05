@@ -1,4 +1,4 @@
-use ratatheme_internal::Color;
+use ratatheme_internal::{Color, ThemeBuilder};
 use ratatui::style::Style;
 use serde::Deserialize;
 
@@ -19,6 +19,16 @@ impl Default for MyColor {
 
 pub struct Theme {
     pub base: Style,
+}
+
+impl ThemeBuilder for Theme {
+    type Context = MyColor;
+
+    fn build(context: &Self::Context) -> Self {
+        Self {
+            base: Style::default().fg(ratatui::style::Color::from(context.primary.clone())),
+        }
+    }
 }
 
 impl From<MyColor> for Theme {

@@ -1,5 +1,6 @@
 use ratatheme_derive::ThemeBuilder;
 use ratatheme_internal::Color;
+use ratatheme_internal::ThemeBuilder;
 use ratatui::style::{Style, Stylize};
 use serde::Deserialize;
 
@@ -9,10 +10,10 @@ pub struct Colors {
 }
 
 #[derive(Debug, ThemeBuilder, PartialEq, Eq)]
-#[builder(colors = Colors)]
+#[builder(context=Colors)]
 pub struct Theme {
     /// Annotate styles with 'fg', 'bg' or any modifier, e.g. 'bold'.
-    #[style(fg(primary), bg(primary), bold, underlined)]
+    #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
     /// Note: other field must implement default.
@@ -21,7 +22,7 @@ pub struct Theme {
 
 fn main() {
     let color = Colors::default();
-    let theme = Theme::build(color);
+    let theme = Theme::build(&color);
     println!("{theme:#?}");
 
     assert_eq!(

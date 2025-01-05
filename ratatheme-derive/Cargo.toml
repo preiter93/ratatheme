@@ -17,12 +17,12 @@ quote = "1.0"
 syn = "2.0"
 proc-macro2 = "1.0"
 
-ratatui = { version = "0.29.0" }
+ratatui = { version = "0.29.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 ratatheme-internal = { workspace = true }
 
 [dev-dependencies]
 ratatheme-internal = { workspace = true }
-ratatui = { version = "0.29.0" }
+ratatui = { version = "0.29.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
