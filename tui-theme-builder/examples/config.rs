@@ -3,14 +3,24 @@ use serde::Deserialize;
 use tui_theme_builder::ThemeBuilder;
 
 #[derive(Debug, Deserialize)]
+pub struct Config {
+    pub colors: Colors,
+    pub footer: Footer,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Colors {
     pub primary: Color,
 }
 
-impl Default for Colors {
+impl Default for Config {
     fn default() -> Self {
         let s = r##"
+        [colors]
         "primary" = "#000000"
+
+        [footer]
+        hide = true
         "##;
         toml::from_str(s).unwrap()
     }
@@ -22,17 +32,26 @@ pub struct Footer {
 }
 
 #[derive(Debug, ThemeBuilder, PartialEq, Eq)]
-#[builder(context=Colors)]
+#[builder(context=Config)]
 pub struct Theme {
     /// Annotate styles with 'fg=color', 'bg=color' or add modifiers,
-    /// e.g. 'bold' or 'underlined'.
-    #[style(fg=primary, bg=primary, bold, underlined)]
+    /// e.g. 'bold', 'underlined' etc.
+    #[style(fg=colors.primary, bg=colors.primary, bold, underlined)]
     pub base: Style,
+
+    /// Fields can also be annoted with `builder(value=x)` to
+    /// assign values from the context. Note: in this case
+    /// the type `Footer` must implement `Clone`.
+    #[builder(value=footer)]
+    pub footer: Footer,
+
+    /// Note: untagged fields are initialized with Default::default().
+    pub tags: usize,
 }
 
 fn main() {
-    let colors = Colors::default();
-    let theme = Theme::build(&colors);
+    let color = Config::default();
+    let theme = Theme::build(&color);
     println!("{theme:#?}");
 
     assert_eq!(
@@ -43,6 +62,8 @@ fn main() {
                 .bg(ratatui::style::Color::Rgb(0, 0, 0))
                 .bold()
                 .underlined(),
+            footer: Footer { hide: true },
+            tags: 0,
         }
     );
 }

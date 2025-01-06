@@ -80,3 +80,28 @@ fn theme_with_unannotated_field() {
     let theme = Theme::build(&context);
     assert_eq!(theme.hide, false);
 }
+
+#[test]
+fn theme_with_with_colors_from_context() {
+    struct Colors {
+        primary: Color,
+    }
+    struct Context {
+        colors: Colors,
+    }
+    #[derive(ThemeBuilder)]
+    #[builder(context=Context)]
+    struct Theme {
+        #[style(fg=colors.primary,bg=colors.primary)]
+        style: Style,
+    }
+
+    let context = Context {
+        colors: Colors {
+            primary: Color::Black,
+        },
+    };
+    let theme = Theme::build(&context);
+    assert_eq!(theme.style.fg, Some(Color::Black));
+    assert_eq!(theme.style.bg, Some(Color::Black));
+}

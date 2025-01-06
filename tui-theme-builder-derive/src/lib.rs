@@ -167,7 +167,7 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<TokenStream2> {
     let _ = attr.parse_nested_meta(|meta| {
         if meta.path.is_ident("value") {
             let value = meta.value()?;
-            let value = parse_stream_to_token_stream(&value)?;
+            let value = extract_metadata_stream(value)?;
             context = Some(value);
             Ok(())
         } else {
@@ -176,25 +176,6 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<TokenStream2> {
     });
 
     context
-}
-
-/// A helper method that parses a `ParseStream` to a `TokenStream`. It is necessary
-/// to handle nested fields such as `#[builder(value=footer.hide)]`
-fn parse_stream_to_token_stream(input: ParseStream) -> Result<TokenStream2, syn::Error> {
-    let mut tokens = TokenStream2::new();
-    while !input.is_empty() {
-        if input.peek(Ident) {
-            let ident: Ident = input.parse()?;
-            tokens.extend(Some(TokenTree::Ident(ident)));
-        } else if input.peek(syn::Token![.]) {
-            let _dot: syn::Token![.] = input.parse()?;
-            tokens.extend(Some(TokenTree::Punct(Punct::new('.', Spacing::Alone))));
-        } else {
-            return Err(input.error("expected an identifier or a dot"));
-        }
-    }
-
-    Ok(tokens)
 }
 
 /// Helper to that process the builder attribute of a struct and returns the
@@ -223,8 +204,8 @@ fn extract_style_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
 
 /// A helper method that processes a field with style annotation.
 fn process_style_attribute(attr: &Attribute) -> StyleValues {
-    let mut foreground: Option<Ident> = None;
-    let mut background: Option<Ident> = None;
+    let mut foreground: Option<TokenStream2> = None;
+    let mut background: Option<TokenStream2> = None;
     let mut bold: Option<bool> = None;
     let mut dim: Option<bool> = None;
     let mut italic: Option<bool> = None;
@@ -249,12 +230,12 @@ fn process_style_attribute(attr: &Attribute) -> StyleValues {
                 "crossed_out" => crossed_out = Some(true),
                 "fg" | "foreground" => {
                     let value = meta.value()?;
-                    let ident = value.parse()?;
+                    let ident = extract_metadata_stream(value).unwrap();
                     foreground = Some(ident);
                 }
                 "bg" | "background" => {
                     let value = meta.value()?;
-                    let ident = value.parse()?;
+                    let ident = extract_metadata_stream(value)?;
                     background = Some(ident);
                 }
                 _ => {}
@@ -280,8 +261,8 @@ fn process_style_attribute(attr: &Attribute) -> StyleValues {
 }
 
 struct StyleValues {
-    foreground: Option<Ident>,
-    background: Option<Ident>,
+    foreground: Option<TokenStream2>,
+    background: Option<TokenStream2>,
     bold: Option<bool>,
     dim: Option<bool>,
     italic: Option<bool>,
@@ -291,4 +272,28 @@ struct StyleValues {
     reversed: Option<bool>,
     hidden: Option<bool>,
     crossed_out: Option<bool>,
+}
+
+/// A helper method that parses a `ParseStream` to a `TokenStream`. It is necessary
+/// to handle nested fields such as `#[builder(value=footer.hide)]`
+fn extract_metadata_stream(input: ParseStream) -> Result<TokenStream2, syn::Error> {
+    let mut tokens = TokenStream2::new();
+    while !input.is_empty() {
+        if input.peek(Ident) {
+            let ident: Ident = input.parse()?;
+            tokens.extend(Some(TokenTree::Ident(ident)));
+        } else if input.peek(syn::Token![.]) {
+            let _dot: syn::Token![.] = input.parse()?;
+            tokens.extend(Some(TokenTree::Punct(Punct::new('.', Spacing::Alone))));
+        } else if input.peek(syn::Token![,]) {
+            break;
+        } else {
+            return Err(input.error(format!(
+                "expected an identifier or a dot, but got {:?}",
+                input
+            )));
+        }
+    }
+
+    Ok(tokens)
 }
