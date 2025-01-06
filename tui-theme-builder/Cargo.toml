@@ -20,3 +20,6 @@ toml = "0.8"
 
 [[example]]
 name = "theme"
+
+[[example]]
+name = "config"
