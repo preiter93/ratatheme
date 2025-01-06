@@ -126,7 +126,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
             };
 
             field_constructor.extend(quote! {
-                    #field_name: context.#value
+                    #field_name: context.#value.clone()
             });
 
             field_constructors.push(field_constructor);

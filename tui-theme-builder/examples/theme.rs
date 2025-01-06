@@ -38,13 +38,13 @@ pub struct Footer {
 #[builder(context=Config)]
 pub struct Theme {
     /// Annotate styles with 'fg=color', 'bg=color' or add modifiers,
-    /// e.g. 'bold' or 'underlined'.
+    /// e.g. 'bold', 'underlined' etc.
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
     /// Fields can also be annoted with `builder(value=x)` to
     /// assign values from the context. Note: in this case
-    /// the type `Footer` must implement `Clone` and `Copy`.
+    /// the type `Footer` must implement `Clone`.
     #[builder(value=footer)]
     pub footer: Footer,
 
