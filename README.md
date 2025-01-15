@@ -1,8 +1,10 @@
-# tui-theme-builder
-
 <div align="center">
+
+# tui-theme-builder
  
 [![Deps.rs Badge]][Deps.rs]
+
+A theme builder macro for [ratatui](https://github.com/ratatui/ratatui) apps.
 
 </div>
 
@@ -17,7 +19,7 @@ pub struct Colors {
     pub primary: Color,
 }
 
-#[derive(Debug, ThemeBuilder, PartialEq, Eq)]
+#[derive(ThemeBuilder)]
 #[builder(context=Colors)]
 pub struct Theme {
     /// Annotate styles with 'fg=color', 'bg=color' or add modifiers,
