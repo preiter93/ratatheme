@@ -7,6 +7,7 @@ use syn::{parse::ParseStream, parse_macro_input, Attribute, Data, DeriveInput, F
 /// # Panics
 /// - Panics if derive is not attached to a struct
 /// - Panics if no `context` attribute is found
+#[allow(clippy::too_many_lines)]
 #[proc_macro_derive(ThemeBuilder, attributes(context, builder, style))]
 pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -307,8 +308,7 @@ fn extract_metadata_stream(input: ParseStream) -> Result<TokenStream2, syn::Erro
             break;
         } else {
             return Err(input.error(format!(
-                "expected an identifier or a dot, but got {:?}",
-                input
+                "expected an identifier or a dot, but got {input:?}",
             )));
         }
     }
