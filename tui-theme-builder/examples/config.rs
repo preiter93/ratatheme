@@ -45,7 +45,9 @@ pub struct Theme {
     #[builder(value=footer)]
     pub footer: Footer,
 
-    /// Note: untagged fields are initialized with Default::default().
+    /// Note: fields tagged with `value=default` are initialized with
+    /// Default::default().
+    #[builder(value=default)]
     pub tags: usize,
 }
 

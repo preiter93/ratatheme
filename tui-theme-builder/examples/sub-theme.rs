@@ -15,8 +15,8 @@ pub struct Theme {
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
-    /// Annotate sub-styles with 'builder(subtheme)'
-    #[builder(subtheme)]
+    /// Unannotated fields are handled as subthemes. They themselves
+    /// must implement `ThemeBuilder`.
     pub sub_theme: Subtheme,
 }
 

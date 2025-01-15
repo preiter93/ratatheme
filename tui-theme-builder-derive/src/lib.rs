@@ -131,9 +131,9 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
                             #field_name: context.#value.clone()
                     });
                 }
-                BuilderFieldAttribute::Subtheme => {
+                BuilderFieldAttribute::Default => {
                     field_constructor.extend(quote! {
-                        #field_name: #field_type::build(context)
+                        #field_name: <#field_type>::default()
                     });
                 }
             }
@@ -144,7 +144,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
 
         // Handle untagged fields.
         field_constructor.extend(quote! {
-                #field_name: <#field_type>::default()
+                #field_name: #field_type::build(context)
         });
 
         field_constructors.push(field_constructor);
@@ -177,10 +177,11 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<BuilderFieldAttri
         if meta.path.is_ident("value") {
             let value = meta.value()?;
             let value = extract_metadata_stream(value)?;
-            attribute = Some(BuilderFieldAttribute::Value(value));
-            Ok(())
-        } else if meta.path.is_ident("subtheme") {
-            attribute = Some(BuilderFieldAttribute::Subtheme);
+            if value.to_string() == "default" {
+                attribute = Some(BuilderFieldAttribute::Default);
+            } else {
+                attribute = Some(BuilderFieldAttribute::Value(value));
+            }
             Ok(())
         } else {
             Err(meta.error("unsupported attribute"))
@@ -192,7 +193,7 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<BuilderFieldAttri
 
 enum BuilderFieldAttribute {
     Value(TokenStream2),
-    Subtheme,
+    Default,
 }
 
 /// Helper to that process the builder attribute of a struct and returns the

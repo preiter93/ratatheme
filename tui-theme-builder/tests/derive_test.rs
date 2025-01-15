@@ -68,11 +68,12 @@ fn theme_with_annotated_field() {
 }
 
 #[test]
-fn theme_with_unannotated_field() {
+fn theme_with_default_field() {
     struct Context {}
     #[derive(ThemeBuilder)]
     #[builder(context=Context)]
     struct Theme {
+        #[builder(value=default)]
         hide: bool,
     }
 
@@ -114,13 +115,12 @@ fn theme_with_subtheme() {
     #[derive(ThemeBuilder)]
     #[builder(context=Colors)]
     struct Theme {
-        #[builder(subtheme)]
-        sub_theme: SubTheme,
+        sub_theme: Subtheme,
     }
 
     #[derive(ThemeBuilder)]
     #[builder(context=Colors)]
-    struct SubTheme {
+    struct Subtheme {
         #[style(foreground=primary)]
         style: Style,
     }
