@@ -15,8 +15,8 @@ pub struct Theme {
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
 
-    /// Annotate sub-styles with 'builder(child)'
-    #[builder(child)]
+    /// Annotate sub-styles with 'builder(subtheme)'
+    #[builder(subtheme)]
     pub sub_theme: Subtheme,
 }
 

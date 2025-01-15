@@ -131,7 +131,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
                             #field_name: context.#value.clone()
                     });
                 }
-                BuilderFieldAttribute::Child => {
+                BuilderFieldAttribute::Subtheme => {
                     field_constructor.extend(quote! {
                         #field_name: #field_type::build(context)
                     });
@@ -179,8 +179,8 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<BuilderFieldAttri
             let value = extract_metadata_stream(value)?;
             attribute = Some(BuilderFieldAttribute::Value(value));
             Ok(())
-        } else if meta.path.is_ident("child") {
-            attribute = Some(BuilderFieldAttribute::Child);
+        } else if meta.path.is_ident("subtheme") {
+            attribute = Some(BuilderFieldAttribute::Subtheme);
             Ok(())
         } else {
             Err(meta.error("unsupported attribute"))
@@ -192,7 +192,7 @@ fn process_builder_field_attribute(attr: &Attribute) -> Option<BuilderFieldAttri
 
 enum BuilderFieldAttribute {
     Value(TokenStream2),
-    Child,
+    Subtheme,
 }
 
 /// Helper to that process the builder attribute of a struct and returns the

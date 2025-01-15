@@ -114,7 +114,7 @@ fn theme_with_subtheme() {
     #[derive(ThemeBuilder)]
     #[builder(context=Colors)]
     struct Theme {
-        #[builder(child)]
+        #[builder(subtheme)]
         sub_theme: SubTheme,
     }
 
