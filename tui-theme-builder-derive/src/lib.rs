@@ -133,7 +133,7 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
                 }
                 BuilderFieldAttribute::Child => {
                     field_constructor.extend(quote! {
-                        #field_name: #field_type::build(context),
+                        #field_name: #field_type::build(context)
                     });
                 }
             }
