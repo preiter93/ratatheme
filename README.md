@@ -16,7 +16,8 @@ use tui_theme_builder::ThemeBuilder;
 
 #[derive(Debug, Deserialize)]
 pub struct Colors {
-    pub primary: Color,
+    pub orange: Color,
+    pub purple: Color,
 }
 
 #[derive(ThemeBuilder)]
@@ -24,14 +25,15 @@ pub struct Colors {
 pub struct Theme {
     /// Annotate styles with 'fg=color', 'bg=color' or add modifiers,
     /// e.g. 'bold' or 'underlined'.
-    #[style(fg=primary, bg=primary, bold, underlined)]
+    #[style(fg=orange, bg=purple, bold, underlined)]
     pub base: Style,
 }
 
 impl Default for Colors {
     fn default() -> Self {
         let s = r##"
-        "primary" = "#000000"
+        "orange" = "#ffb86c"
+        "purple" = "#bd93f9"
         "##;
         toml::from_str(s).unwrap()
     }
