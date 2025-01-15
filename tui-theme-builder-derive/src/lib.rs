@@ -125,9 +125,18 @@ pub fn derive_theme_builder(input: TokenStream) -> TokenStream {
                 panic!("missing value in `builder` on field `{:?}`", field_name);
             };
 
-            field_constructor.extend(quote! {
-                    #field_name: context.#value.clone()
-            });
+            match value {
+                BuilderFieldAttribute::Value(value) => {
+                    field_constructor.extend(quote! {
+                            #field_name: context.#value.clone()
+                    });
+                }
+                BuilderFieldAttribute::Child => {
+                    field_constructor.extend(quote! {
+                        #field_name: #field_type::build(context),
+                    });
+                }
+            }
 
             field_constructors.push(field_constructor);
             continue;
@@ -161,21 +170,29 @@ fn extract_builder_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
 }
 
 /// A helper method that processes a field with builder annotation.
-fn process_builder_field_attribute(attr: &Attribute) -> Option<TokenStream2> {
-    let mut context: Option<TokenStream2> = None;
+fn process_builder_field_attribute(attr: &Attribute) -> Option<BuilderFieldAttribute> {
+    let mut attribute: Option<BuilderFieldAttribute> = None;
 
     let _ = attr.parse_nested_meta(|meta| {
         if meta.path.is_ident("value") {
             let value = meta.value()?;
             let value = extract_metadata_stream(value)?;
-            context = Some(value);
+            attribute = Some(BuilderFieldAttribute::Value(value));
+            Ok(())
+        } else if meta.path.is_ident("child") {
+            attribute = Some(BuilderFieldAttribute::Child);
             Ok(())
         } else {
             Err(meta.error("unsupported attribute"))
         }
     });
 
-    context
+    attribute
+}
+
+enum BuilderFieldAttribute {
+    Value(TokenStream2),
+    Child,
 }
 
 /// Helper to that process the builder attribute of a struct and returns the

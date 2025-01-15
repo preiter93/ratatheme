@@ -23,3 +23,6 @@ name = "theme"
 
 [[example]]
 name = "config"
+
+[[example]]
+name = "sub-theme"

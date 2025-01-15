@@ -3,11 +3,11 @@ use serde::Deserialize;
 use tui_theme_builder_internal::ThemeBuilder;
 
 #[derive(Debug, Deserialize)]
-pub struct MyColor {
+pub struct Colors {
     pub primary: Color,
 }
 
-impl Default for MyColor {
+impl Default for Colors {
     fn default() -> Self {
         let toml_str = r##"
             "primary" = "#000000"
@@ -19,10 +19,26 @@ impl Default for MyColor {
 
 pub struct Theme {
     pub base: Style,
+    pub sub_theme: Subtheme,
+}
+
+pub struct Subtheme {
+    pub base: Style,
 }
 
 impl ThemeBuilder for Theme {
-    type Context = MyColor;
+    type Context = Colors;
+
+    fn build(context: &Self::Context) -> Self {
+        Self {
+            base: Style::default().fg(ratatui::style::Color::from(context.primary.clone())),
+            sub_theme: Subtheme::build(context),
+        }
+    }
+}
+
+impl ThemeBuilder for Subtheme {
+    type Context = Colors;
 
     fn build(context: &Self::Context) -> Self {
         Self {
@@ -31,15 +47,7 @@ impl ThemeBuilder for Theme {
     }
 }
 
-impl From<MyColor> for Theme {
-    fn from(value: MyColor) -> Self {
-        Self {
-            base: Style::default().fg(ratatui::style::Color::from(value.primary.clone())),
-        }
-    }
-}
-
 fn main() {
-    let color = MyColor::default();
+    let color = Colors::default();
     println!("{:#?}", color.primary);
 }

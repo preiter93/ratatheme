@@ -14,6 +14,17 @@ pub struct Theme {
     /// e.g. 'bold' or 'underlined'.
     #[style(fg=primary, bg=primary, bold, underlined)]
     pub base: Style,
+
+    /// Annotate sub-styles with 'builder(child)'
+    #[builder(child)]
+    pub sub_theme: Subtheme,
+}
+
+#[derive(Debug, ThemeBuilder, PartialEq, Eq)]
+#[builder(context=Colors)]
+pub struct Subtheme {
+    #[style(fg=primary, bg=primary)]
+    pub base: Style,
 }
 
 impl Default for Colors {
@@ -38,6 +49,11 @@ fn main() {
                 .bg(ratatui::style::Color::Rgb(0, 0, 0))
                 .bold()
                 .underlined(),
+            sub_theme: Subtheme {
+                base: Style::default()
+                    .fg(ratatui::style::Color::Rgb(0, 0, 0))
+                    .bg(ratatui::style::Color::Rgb(0, 0, 0)),
+            }
         }
     );
 }
