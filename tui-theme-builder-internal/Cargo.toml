@@ -6,7 +6,6 @@ repository.workspace = true
 edition.workspace = true
 authors.workspace = true
 keywords.workspace = true
-readme = "README.md"
 license = "MIT"
 
 [dependencies]
