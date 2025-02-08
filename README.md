@@ -2,7 +2,7 @@
 
 # tui-theme-builder
  
-[![Deps.rs Badge]][Deps.rs]
+[![Crates.io Badge]][Crates.io] [![Deps.rs Badge]][Deps.rs]
 
 A theme builder macro for [ratatui](https://github.com/ratatui/ratatui) apps.
 
@@ -51,3 +51,5 @@ fn main() {
 
 [Deps.rs Badge]: https://deps.rs/repo/github/preiter93/tui-theme-builder/status.svg?path=tui-theme-builder&style=flat-square
 [Deps.rs]: https://deps.rs/repo/github/preiter93/tui-theme-builder?path=tui-theme-builder
+[Crates.io Badge]: https://img.shields.io/crates/v/tui-theme-builder?logo=rust&style=flat-square&logoColor=E05D44&color=E05D44
+[Crates.io]: https://crates.io/crates/tui-theme-builder
